@@ -28,7 +28,7 @@ int main(){
     cloud_reader.read(path+input_cloud, *cloud); // Reading cloud fromthe path and storing it in the empty cloud created
 
 
-    ////////// VOXEL FILTER
+    ////////// VOXEL DOWNSAMPLING
 
     pcl::PointCloud<PointT>::Ptr voxel_cloud (new pcl::PointCloud<PointT>); // Similarly creating a cloud of same type for the output cloud with voxel filter applied
     // Voxel Grid
@@ -43,18 +43,18 @@ int main(){
     pcl::PointCloud<PointT>::Ptr pass_through_cloud (new pcl::PointCloud<PointT>); // Similarly creating a cloud of same type for the output cloud with pass through filter applied
     
         // Passthrough filter along x
-    pcl::PassThrough<PointT> passing_x;
-    passing_x.setInputCloud(voxel_cloud);
-    passing_x.setFilterFieldName("x");
-    passing_x.setFilterLimits(-1.4, 1.4);
-    passing_x.filter(*pass_through_cloud);
+    pcl::PassThrough<PointT> passing_x; // Creating an instance of passthrough filter class
+    passing_x.setInputCloud(voxel_cloud); 
+    passing_x.setFilterFieldName("x"); // Filtering should be done based on x coordinate of points
+    passing_x.setFilterLimits(-1.4, 1.4); // Range of filtering. (Only points with x coordinate in range -1.4 - 1.4 will be retained)
+    passing_x.filter(*pass_through_cloud); // Filtering
 
     // Passthrough filter along y
-    pcl::PassThrough<PointT> passing_y;
-    passing_y.setInputCloud(pass_through_cloud);
-    passing_y.setFilterFieldName("y");
-    passing_y.setFilterLimits(-1.4, 1.4);
-    passing_y.filter(*pass_through_cloud);
+    pcl::PassThrough<PointT> passing_y; // Creating an instance of passthrough filter class
+    passing_y.setInputCloud(pass_through_cloud); 
+    passing_y.setFilterFieldName("y"); // Filtering should be done based on y coordinate of points
+    passing_y.setFilterLimits(-1.4, 1.4); // Range of filtering. (Only points with y coordinate in range -1.4 - 1.4 will be retained)
+    passing_y.filter(*pass_through_cloud); // Filtering
 
 
     ////////// PLANER SEGMENTATION 
