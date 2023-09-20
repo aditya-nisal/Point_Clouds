@@ -32,10 +32,10 @@ int main(){
 
     pcl::PointCloud<PointT>::Ptr voxel_cloud (new pcl::PointCloud<PointT>); // Similarly creating a cloud of same type for the output cloud with voxel filter applied
     // Voxel Grid
-    pcl::VoxelGrid<PointT> voxel_filter;
+    pcl::VoxelGrid<PointT> voxel_filter; // Creates an instance of voxel grid downsampling
     voxel_filter.setInputCloud(cloud);
-    voxel_filter.setLeafSize(0.05, 0.05, 0.05);
-    voxel_filter.filter(*voxel_cloud);
+    voxel_filter.setLeafSize(0.05, 0.05, 0.05); //Has the x, y, z length of voxel (here: 0.05*0.05*0.05 cube formed)
+    voxel_filter.filter(*voxel_cloud); // Downsampling
     
 
     ////////// PASS THROUGH FILTER   
