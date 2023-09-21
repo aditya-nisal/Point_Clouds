@@ -90,6 +90,11 @@ int main(){
     pcl::NormalEstimation<PointT, pcl::Normal> normals_estimator; // Instanc eof normal estimator class. Will be used to estimate normals
     pcl::SACSegmentationFromNormals<PointT, pcl::Normal> cylinder_segmentor; // Instance of class . will be used to segment geometries
     pcl::ExtractIndices<PointT> cylinder_indices_extractor; // Instance of class. Will be used to extract the inlier points
+    pcl::ExtractIndices<pcl::Normal> cylinder_normal_indices_extractor; // Instance of class. Will be used to extract the normals
+
+    pcl::PointIndices::Ptr cylinder_in (new pcl::PointIndices); // Initialize a shared ptr to a new instance of inliers
+    pcl::ModelCoefficients::Ptr cylinder_coeff (new pcl::ModelCoefficients); // Initialize a shared ptr to a new instance of coefficients that fit the equation. Here it is a cylinder
+
 
     // Configure and run the normal estimation
     normals_estimator.setSearchMethod(tree);
@@ -100,22 +105,46 @@ int main(){
     // Configured and run the cylinder segmentation
     cylinder_segmentor.setModelType(pcl::SACMODEL_CYLINDER);
     cylinder_segmentor.setMethodType(pcl::SAC_RANSAC);
-    cylinder_segmentor.setDistanceThreshold(0.05);
+	cylinder_segmentor.setNormalDistanceWeight(0.5);
+	cylinder_segmentor.setMaxIterations(10000);
+	cylinder_segmentor.setDistanceThreshold(0.05);
+	cylinder_segmentor.setRadiusLimits(0.1, 0.4);
 
+int looping_var = 0;
+while(true){
     cylinder_segmentor.setInputCloud(plane_segmented_cloud);
     cylinder_segmentor.setInputNormals(cloud_normals);
-    cylinder_segmentor.segment(*inliers, *coefficients);
+    cylinder_segmentor.segment(*cylinder_in, *cylinder_coeff);
 
     // Previously computed inliers are used to extract the points of the cylinder
     cylinder_indices_extractor.setInputCloud(plane_segmented_cloud);
-    cylinder_indices_extractor.setIndices(inliers);
+    cylinder_indices_extractor.setIndices(cylinder_in);
     cylinder_indices_extractor.setNegative(false);
     cylinder_indices_extractor.filter(*cylinder_cloud);
 
 
     //////////  WRITING THE CLOUD
+    if(!cylinder_cloud->points.empty()){
+        std::stringstream loop_name_cloud;
+        loop_name_cloud <<"cloud_"<<looping_var<<".pcd";
+        if (cylinder_cloud->points.size() >50){
+        CloudSaver(loop_name_cloud.str(), path, cylinder_cloud);
+        looping_var++;
+        }
+    cylinder_indices_extractor.setNegative(true);
+    cylinder_indices_extractor.filter(*plane_segmented_cloud);
 
-    CloudSaver("cylinder_cloud.pcd", path, cylinder_cloud);
+    cylinder_normal_indices_extractor.setInputCloud(cloud_normals);
+    cylinder_normal_indices_extractor.setIndices(cylinder_in);
+    cylinder_normal_indices_extractor.setNegative(true);
+    cylinder_normal_indices_extractor.filter(*cloud_normals);
+
+    }
+
+    else{
+        return 0;
+    }
+}
     return 0;
 
 }
