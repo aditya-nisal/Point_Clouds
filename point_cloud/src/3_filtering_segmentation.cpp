@@ -8,6 +8,10 @@
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/filters/extract_indices.h>
+#include <pcl/search/search.h>
+#include <pcl/search/kdtree.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/visualization/cloud_viewer.h>
 
 typedef pcl::PointXYZRGB PointT; // Flexible tempelate to hold the data into a flexible pcl point
 
@@ -73,13 +77,44 @@ int main(){
 
     indices_extractor.setInputCloud(pass_through_cloud);
     indices_extractor.setIndices(inliers); // Providing the indices for the cloud
-    indices_extractor.setNegative(false); // Do we need the negative of what we segmented
+    indices_extractor.setNegative(true); // Do we need the negative of what we segmented
     indices_extractor.filter(*plane_segmented_cloud); // Adding the indices(inlier) points to the output cloud
+
+
+    ////////// CYLINDER SEGMENTATION
+
+    pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>); // Creates a shared ptr to a new pcd that holds normal
+    pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>()); // Shared poniter to a new kdtree is created
+    pcl::PointCloud<PointT>::Ptr cylinder_cloud (new pcl::PointCloud<PointT>()); // Similarly creating a cloud of same type for the output cloud for the segmented cylinder
+
+    pcl::NormalEstimation<PointT, pcl::Normal> normals_estimator;
+    pcl::SACSegmentationFromNormals<PointT, pcl::Normal> cylinder_segmentor;
+    pcl::ExtractIndices<PointT> cylinder_indices_extractor;
+
+    normals_estimator.setSearchMethod(tree);
+    normals_estimator.setInputCloud(plane_segmented_cloud);
+    normals_estimator.setKSearch(30);
+    normals_estimator.compute(*cloud_normals);
+
+
+    cylinder_segmentor.setModelType(pcl::SACMODEL_CYLINDER);
+    cylinder_segmentor.setMethodType(pcl::SAC_RANSAC);
+    cylinder_segmentor.setDistanceThreshold(0.05);
+
+    cylinder_segmentor.setInputCloud(plane_segmented_cloud);
+    cylinder_segmentor.setInputNormals(cloud_normals);
+    cylinder_segmentor.segment(*inliers, *coefficients);
+
+
+    cylinder_indices_extractor.setInputCloud(plane_segmented_cloud);
+    cylinder_indices_extractor.setIndices(inliers);
+    cylinder_indices_extractor.setNegative(false);
+    cylinder_indices_extractor.filter(*cylinder_cloud);
 
 
     //////////  WRITING THE CLOUD
 
-    CloudSaver("plane_seg.pcd", path, plane_segmented_cloud);
+    CloudSaver("test.pcd", path, cylinder_cloud);
     return 0;
 
 }
