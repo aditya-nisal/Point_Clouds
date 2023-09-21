@@ -77,7 +77,7 @@ int main(){
 
     indices_extractor.setInputCloud(pass_through_cloud);
     indices_extractor.setIndices(inliers); // Providing the indices for the cloud
-    indices_extractor.setNegative(true); // Do we need the negative of what we segmented
+    indices_extractor.setNegative(true); // Do we need the negative of what we segmented (Set true to get the cylinders)
     indices_extractor.filter(*plane_segmented_cloud); // Adding the indices(inlier) points to the output cloud
 
 
@@ -87,16 +87,17 @@ int main(){
     pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>()); // Shared poniter to a new kdtree is created
     pcl::PointCloud<PointT>::Ptr cylinder_cloud (new pcl::PointCloud<PointT>()); // Similarly creating a cloud of same type for the output cloud for the segmented cylinder
 
-    pcl::NormalEstimation<PointT, pcl::Normal> normals_estimator;
-    pcl::SACSegmentationFromNormals<PointT, pcl::Normal> cylinder_segmentor;
-    pcl::ExtractIndices<PointT> cylinder_indices_extractor;
+    pcl::NormalEstimation<PointT, pcl::Normal> normals_estimator; // Instanc eof normal estimator class. Will be used to estimate normals
+    pcl::SACSegmentationFromNormals<PointT, pcl::Normal> cylinder_segmentor; // Instance of class . will be used to segment geometries
+    pcl::ExtractIndices<PointT> cylinder_indices_extractor; // Instance of class. Will be used to extract the inlier points
 
+    // Configure and run the normal estimation
     normals_estimator.setSearchMethod(tree);
     normals_estimator.setInputCloud(plane_segmented_cloud);
     normals_estimator.setKSearch(30);
     normals_estimator.compute(*cloud_normals);
 
-
+    // Configured and run the cylinder segmentation
     cylinder_segmentor.setModelType(pcl::SACMODEL_CYLINDER);
     cylinder_segmentor.setMethodType(pcl::SAC_RANSAC);
     cylinder_segmentor.setDistanceThreshold(0.05);
@@ -105,7 +106,7 @@ int main(){
     cylinder_segmentor.setInputNormals(cloud_normals);
     cylinder_segmentor.segment(*inliers, *coefficients);
 
-
+    // Previously computed inliers are used to extract the points of the cylinder
     cylinder_indices_extractor.setInputCloud(plane_segmented_cloud);
     cylinder_indices_extractor.setIndices(inliers);
     cylinder_indices_extractor.setNegative(false);
@@ -114,7 +115,7 @@ int main(){
 
     //////////  WRITING THE CLOUD
 
-    CloudSaver("test.pcd", path, cylinder_cloud);
+    CloudSaver("cylinder_cloud.pcd", path, cylinder_cloud);
     return 0;
 
 }
