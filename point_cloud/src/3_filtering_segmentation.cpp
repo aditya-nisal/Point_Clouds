@@ -70,7 +70,7 @@ int main(){
     pcl::ExtractIndices<PointT> indices_extractor; // Extract segmented points
 
     plane_segmentor.setInputCloud(pass_through_cloud);
-    plane_segmentor.setModelType(pcl::SACMODEL_PLANE); // Specifing the moel to Segment the plane
+    plane_segmentor.setModelType(pcl::SACMODEL_PLANE); // Specifing the model to Segment the plane
     plane_segmentor.setMethodType(pcl::SAC_RANSAC); // Method type for the seg- RANSAC
     plane_segmentor.setDistanceThreshold(0.01); // Distance this segmentation will have from the segmented plane and other points
     plane_segmentor.segment(*inliers, *coefficients); //Performing segmentation. Inliers- indices
