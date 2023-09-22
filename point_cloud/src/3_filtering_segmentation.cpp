@@ -97,13 +97,13 @@ int main(){
 
 
     // Configure and run the normal estimation
-    normals_estimator.setSearchMethod(tree);
-    normals_estimator.setInputCloud(plane_segmented_cloud);
-    normals_estimator.setKSearch(30);
-    normals_estimator.compute(*cloud_normals);
+    normals_estimator.setSearchMethod(tree); // Sets searrch method of normal estimator to be kdtree
+    normals_estimator.setInputCloud(plane_segmented_cloud); // Sets input cloud
+    normals_estimator.setKSearch(30); // Neighbouring points to be used for normal estimation
+    normals_estimator.compute(*cloud_normals); // Compute normals at each point and store them
 
     // Configured and run the cylinder segmentation
-    cylinder_segmentor.setModelType(pcl::SACMODEL_CYLINDER);
+    cylinder_segmentor.setModelType(pcl::SACMODEL_CYLINDER); // Model type to cylinder
     cylinder_segmentor.setMethodType(pcl::SAC_RANSAC);
 	cylinder_segmentor.setNormalDistanceWeight(0.5);
 	cylinder_segmentor.setMaxIterations(10000);
@@ -112,11 +112,11 @@ int main(){
 
 int looping_var = 0;
 while(true){
-    cylinder_segmentor.setInputCloud(plane_segmented_cloud);
-    cylinder_segmentor.setInputNormals(cloud_normals);
-    cylinder_segmentor.segment(*cylinder_in, *cylinder_coeff);
+    cylinder_segmentor.setInputCloud(plane_segmented_cloud); // Set input cloud
+    cylinder_segmentor.setInputNormals(cloud_normals); // Set normals
+    cylinder_segmentor.segment(*cylinder_in, *cylinder_coeff); // Get inliers and coefficients
 
-    // Previously computed inliers are used to extract the points of the cylinder
+    // Previously computed inliers are used to extract the points of the cylinder from cylinder cloud
     cylinder_indices_extractor.setInputCloud(plane_segmented_cloud);
     cylinder_indices_extractor.setIndices(cylinder_in);
     cylinder_indices_extractor.setNegative(false);
@@ -131,12 +131,12 @@ while(true){
         CloudSaver(loop_name_cloud.str(), path, cylinder_cloud);
         looping_var++;
         }
-    cylinder_indices_extractor.setNegative(true);
+    cylinder_indices_extractor.setNegative(true); // Removing cylinder from the cloud
     cylinder_indices_extractor.filter(*plane_segmented_cloud);
 
-    cylinder_normal_indices_extractor.setInputCloud(cloud_normals);
+    cylinder_normal_indices_extractor.setInputCloud(cloud_normals); // Configuring normal indices extractor
     cylinder_normal_indices_extractor.setIndices(cylinder_in);
-    cylinder_normal_indices_extractor.setNegative(true);
+    cylinder_normal_indices_extractor.setNegative(true); // Remove  points of the detected cylinder
     cylinder_normal_indices_extractor.filter(*cloud_normals);
 
     }
