@@ -8,6 +8,9 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(PCL REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
 
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
@@ -27,6 +30,10 @@ target_link_libraries(filtering_segmentation ${PCL_LIBRARIES})
 add_executable(point_path_drawing src/4_point_path_drawing.cpp)
 target_link_libraries(point_path_drawing ${PCL_LIBRARIES})
 
+add_executable(kitti_voxel src/5_kitti_data_voxel.cpp)
+ament_target_dependencies(kitti_voxel rclcpp sensor_msgs std_msgs pcl_conversions)
+target_link_libraries(kitti_voxel ${PCL_LIBRARIES})
+
 
 install(TARGETS
   pcd_import 
@@ -34,6 +41,7 @@ install(TARGETS
   circular_cloud
   filtering_segmentation
   point_path_drawing
+  kitti_voxel
   DESTINATION lib/${PROJECT_NAME}
 )
 
