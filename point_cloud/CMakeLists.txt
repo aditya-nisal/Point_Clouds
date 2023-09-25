@@ -34,6 +34,9 @@ add_executable(kitti_voxel src/5_kitti_data_voxel.cpp)
 ament_target_dependencies(kitti_voxel rclcpp sensor_msgs std_msgs pcl_conversions)
 target_link_libraries(kitti_voxel ${PCL_LIBRARIES})
 
+add_executable(kd_tree src/6_kd_tree.cpp)
+target_link_libraries(kd_tree ${PCL_LIBRARIES})
+
 
 install(TARGETS
   pcd_import 
@@ -42,6 +45,7 @@ install(TARGETS
   filtering_segmentation
   point_path_drawing
   kitti_voxel
+  kd_tree
   DESTINATION lib/${PROJECT_NAME}
 )
 
