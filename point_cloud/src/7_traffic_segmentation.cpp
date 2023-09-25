@@ -81,6 +81,24 @@ class VoxelGridFilter : public rclcpp::Node
     road_extract_indices.setNegative(false);
     road_extract_indices.filter(*road_cloud);
 
+    // Extracting the clusters
+    /* single segmented cluster->all clusters at a given time extraacted with our segmentation->arranging cluster based on indices->cluster extracted based on 
+    eucludian distance*/
+    pcl::PointCloud<PointT>::Ptr single_segmented_cluster (new pcl::PointCloud<PointT>);
+    pcl::PointCloud<PointT>::Ptr all_clusters (new pcl::PointCloud<PointT>);
+    std::vector<pcl::PointIndices> cluster_indices;
+    pcl::EuclideanClusterExtraction<PointT> eucludian_cluster_extractor;
+
+    // Eucludian cluster
+    tree->setInputCloud(road_cloud); // Giving the input to the tree
+    eucludian_cluster_extractor.setMinClusterSize(100);
+    eucludian_cluster_extractor.setMaxClusterSize(2000);
+    eucludian_cluster_extractor.setSearchMethod(tree);
+    eucludian_cluster_extractor.setInputCloud(road_cloud);
+    eucludian_cluster_extractor.extract(); // Extract all the clusters in the road cloud given that these are the properties
+
+
+
 
     // Convert to ROS2 message again
     sensor_msgs::msg::PointCloud2 traffic_seg_ros2;
