@@ -12,9 +12,11 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
 
+
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
+
 add_executable(pcd_import src/0_table_scene.cpp)
 target_link_libraries(pcd_import ${PCL_LIBRARIES})
 
@@ -37,6 +39,10 @@ target_link_libraries(kitti_voxel ${PCL_LIBRARIES})
 add_executable(kd_tree src/6_kd_tree.cpp)
 target_link_libraries(kd_tree ${PCL_LIBRARIES})
 
+add_executable(traffic_segmentation src/7_traffic_segmentation.cpp)
+ament_target_dependencies(traffic_segmentation rclcpp sensor_msgs pcl_conversions)
+target_link_libraries(traffic_segmentation ${PCL_LIBRARIES})
+
 
 install(TARGETS
   pcd_import 
@@ -46,6 +52,7 @@ install(TARGETS
   point_path_drawing
   kitti_voxel
   kd_tree
+  traffic_segmentation
   DESTINATION lib/${PROJECT_NAME}
 )
 

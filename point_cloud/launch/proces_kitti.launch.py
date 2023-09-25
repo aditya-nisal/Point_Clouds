@@ -11,6 +11,6 @@ def generate_launch_description():
         ),
 
         Node(
-            package='point_cloud', executable = 'kitti_voxel', output = 'screen',
+            package='point_cloud', executable = 'traffic_segmentation', output = 'screen',
         ),
     ])
