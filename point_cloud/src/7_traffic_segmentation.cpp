@@ -132,8 +132,8 @@ class VoxelGridFilter : public rclcpp::Node
 
         // Bounding Boxes drawing
         Eigen::Vector4f min_pt, max_pt;
-        pcl::getMinMax3D<PointT>(*reasonable_cluster, min_pt, max_pt);
-        pcl::PointXYZ center((min_pt[0] +  max_pt[0]) / 2.0, (min_pt[1] + max_pt[1]) / 2.0, (min_pt[2]) / 2.0 );
+        pcl::getMinMax3D<PointT>(*reasonable_cluster, min_pt, max_pt); // Get the min and max coordinate of the cluster
+        pcl::PointXYZ center((min_pt[0] +  max_pt[0]) / 2.0, (min_pt[1] + max_pt[1]) / 2.0, (min_pt[2] + max_pt[2]) / 2.0 ); // Calculate center for BBox
         BBOX bbox;
         bbox.x_min = min_pt[0];
         bbox.y_min = min_pt[1];
