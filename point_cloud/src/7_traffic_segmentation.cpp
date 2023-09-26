@@ -86,15 +86,16 @@ class VoxelGridFilter : public rclcpp::Node
     // Extracting the clusters
     /* single segmented cluster->all clusters at a given time extraacted with our segmentation->arranging cluster based on indices->cluster extracted based on 
     eucludian distance*/
-    pcl::PointCloud<PointT>::Ptr single_segmented_cluster (new pcl::PointCloud<PointT>);
-    pcl::PointCloud<PointT>::Ptr all_clusters (new pcl::PointCloud<PointT>);
-    std::vector<pcl::PointIndices> cluster_indices;
+    pcl::PointCloud<PointT>::Ptr single_segmented_cluster (new pcl::PointCloud<PointT>); // Pointer to PCD to hold a cluster
+    pcl::PointCloud<PointT>::Ptr all_clusters (new pcl::PointCloud<PointT>); // Pointer to PCD to hold all clusters
+    std::vector<pcl::PointIndices> cluster_indices; // Vector to store indices of points in each cluster
     pcl::EuclideanClusterExtraction<PointT> eucludian_cluster_extractor;
 
+    // Size threshold to filter out cluster that are too large or too small
     size_t min_cloud_threshold = 110;
     size_t max_cloud_threshold = 3000;
 
-    struct BBOX{
+    struct BBOX{  // Struct to store min and max coordinates of the bounding box along with its colours
       float x_min;
       float x_max;
       float y_min;
@@ -110,17 +111,17 @@ class VoxelGridFilter : public rclcpp::Node
     std::vector <BBOX> bboxes;
 
     // Eucludian cluster
+    // Kd tree search method 
     tree->setInputCloud(road_cloud); // Giving the input to the tree
     eucludian_cluster_extractor.setMinClusterSize(100);
     eucludian_cluster_extractor.setMaxClusterSize(4s000);
     eucludian_cluster_extractor.setSearchMethod(tree);
     eucludian_cluster_extractor.setInputCloud(road_cloud);
-    eucludian_cluster_extractor.extract(); // Extract all the clusters in the road cloud given that these are the properties
+    eucludian_cluster_extractor.extract(cluster_indices); // Extract all the clusters in the road cloud given that these are the properties
 
-    for(size_t = 0; i<cluster_indices.size(); i++){
-      if (cluser_indices[i].indices.size() > min_cloud_threshold && cluster_indices[i].indices.size() < max_cloud_threshold) // Whichever lies between the threshold is oing to be passed on
-      {
-        pcl::PointCloud<PointT>::Ptr reasonable_cluster (new pcl::PointCloud<PointT>);
+    for(size_t i = 0; i<cluster_indices.size(); i++){
+      if (cluser_indices[i].indices.size() > min_cloud_threshold && cluster_indices[i].indices.size() < max_cloud_threshold) // For each cluster it checks if size is between defined thresholds
+        pcl::PointCloud<PointT>::Ptr reasonable_cluster (new pcl::PointCloud<PointT>); // New point cloud
         pcl::ExtractIndices<PointT> extract;
         pcl::IndicesPtr indices(new std::vector<int>(cluster_indices[i].begin(), cluster_indices[i].indices.end()))
 
