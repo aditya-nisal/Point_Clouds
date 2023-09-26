@@ -11,6 +11,8 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/octree/octree_pointcloud.h>
+#include <pcl/octree/octree.h>
 
 
 using namespace std::chrono_literals;
@@ -89,14 +91,59 @@ class VoxelGridFilter : public rclcpp::Node
     std::vector<pcl::PointIndices> cluster_indices;
     pcl::EuclideanClusterExtraction<PointT> eucludian_cluster_extractor;
 
+    size_t min_cloud_threshold = 110;
+    size_t max_cloud_threshold = 3000;
+
+    struct BBOX{
+      float x_min;
+      float x_max;
+      float y_min;
+      float y_max;
+      float z_min;  
+      float z_max;  
+      double r = 1.0;
+      double g = 0.0;
+      double b = 0.0;
+
+    };
+
+    std::vector <BBOX> bboxes;
+
     // Eucludian cluster
     tree->setInputCloud(road_cloud); // Giving the input to the tree
     eucludian_cluster_extractor.setMinClusterSize(100);
-    eucludian_cluster_extractor.setMaxClusterSize(2000);
+    eucludian_cluster_extractor.setMaxClusterSize(4s000);
     eucludian_cluster_extractor.setSearchMethod(tree);
     eucludian_cluster_extractor.setInputCloud(road_cloud);
     eucludian_cluster_extractor.extract(); // Extract all the clusters in the road cloud given that these are the properties
 
+    for(size_t = 0; i<cluster_indices.size(); i++){
+      if (cluser_indices[i].indices.size() > min_cloud_threshold && cluster_indices[i].indices.size() < max_cloud_threshold) // Whichever lies between the threshold is oing to be passed on
+      {
+        pcl::PointCloud<PointT>::Ptr reasonable_cluster (new pcl::PointCloud<PointT>);
+        pcl::ExtractIndices<PointT> extract;
+        pcl::IndicesPtr indices(new std::vector<int>(cluster_indices[i].begin(), cluster_indices[i].indices.end()))
+
+        extract.setInputCloud(road_cloud);
+        extract.setIndices(indices);
+        extract.setNegative(false);
+        extract.filter(*reasonable_cluster);     
+
+        // Bounding Boxes drawing
+        Eigen::Vector4f min_pt, max_pt;
+        pcl::getMinMax3D<PointT>(*reasonable_cluster, min_pt, max_pt);
+        pcl::PointXYZ center((min_pt[0] +  max_pt[0]) / 2.0, (min_pt[1] + max_pt[1]) / 2.0, (min_pt[2]) / 2.0 );
+        BBOX bbox;
+        bbox.x_min = min_pt[0];
+        bbox.y_min = min_pt[1];
+        bbox.z_min = min_pt[2];
+        bbox.x_max = max_pt[0];
+        bbox.y_max = max_pt[1];
+        bbox.z_max = max_pt[2];
+        bboxes.push_back(bbox);
+
+      }
+    }
 
 
 
