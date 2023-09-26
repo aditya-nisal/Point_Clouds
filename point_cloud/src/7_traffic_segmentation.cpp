@@ -120,7 +120,7 @@ class VoxelGridFilter : public rclcpp::Node
     eucludian_cluster_extractor.extract(cluster_indices); // Extract all the clusters in the road cloud given that these are the properties
 
     for(size_t i = 0; i<cluster_indices.size(); i++){
-      if (cluser_indices[i].indices.size() > min_cloud_threshold && cluster_indices[i].indices.size() < max_cloud_threshold) // For each cluster it checks if size is between defined thresholds
+      if (cluser_indices[i].indices.size() > min_cloud_threshold && cluster_indices[i].indices.size() < max_cloud_threshold){ // For each cluster it checks if size is between defined thresholds
         pcl::PointCloud<PointT>::Ptr reasonable_cluster (new pcl::PointCloud<PointT>); // New point cloud
         pcl::ExtractIndices<PointT> extract;
         pcl::IndicesPtr indices(new std::vector<int>(cluster_indices[i].begin(), cluster_indices[i].indices.end()))
@@ -144,8 +144,34 @@ class VoxelGridFilter : public rclcpp::Node
         bboxes.push_back(bbox);
 
       }
+    
     }
 
+    // Drawing Bounding boxes
+
+    visualization_msgs::msg::MarkerArray marker_array;
+
+    int id = 0;
+    const std_msgs::msg::Header& inp_header = input_cloud->header;
+
+    // Create a marker for each bounding box
+    for (const auto& bbox :: bboxes){
+
+      // Create marker for top square
+      visualization_msgs::msg::Marker top_square_marker;
+      
+      top_square_marker.header = inp_header;
+      top_square_marker.ns = "bpunding_boxes";
+      top_square_marker.id = id++;
+      top_square_marker.type = visualization_msgs::msg::Marker::LINE_STRIP ;
+      top_square_marker.action = visualization_msgs::msg::Marker::ADD;
+      top_square_marker..pose.orientation.w = 1.0;
+      top_square_marker.scale.x = 0.06;
+      top_square_marker.color.r = bbox.r;
+      top_square_marker.color.g = bbox.g;
+      top_square_marker.color.b = bbox.b;
+      top_square_marker.color.a = 1.0;
+    }
 
 
     // Convert to ROS2 message again
