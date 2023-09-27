@@ -46,7 +46,8 @@ class VoxelGrid_filter : public rclcpp::Node
         pcl::PointCloud<PointT>::Ptr cropped_cloud (new pcl::PointCloud<PointT>) ;
 
         pcl::fromROSMsg(*input_cloud, *pcl_cloud);
-  //==================================== Pre Processing Data ====================================
+
+        // Passthrough Filtering
         pcl::PassThrough<PointT> passing_x;
         pcl::PassThrough<PointT> passing_y;
         int radius = 15;
@@ -61,13 +62,17 @@ class VoxelGrid_filter : public rclcpp::Node
         passing_y.setFilterFieldName("y");
         passing_y.setFilterLimits(-radius,radius);
         passing_y.filter(*cropped_cloud);
-        // Voxel Filter
+        
+        // Voxel Downsampling
         pcl::PointCloud<PointT>::Ptr voxel_cloud (new pcl::PointCloud<PointT>) ;
         pcl::VoxelGrid<PointT> voxel_filter;
         voxel_filter.setInputCloud(cropped_cloud);
         voxel_filter.setLeafSize(0.1 , 0.1, 0.1);
         voxel_filter.filter(*voxel_cloud);
-  //==================================== Road Segmentation  ====================================
+
+        
+        // Road Segmentation
+
         pcl::NormalEstimation<PointT, pcl::Normal> normal_extractor;
         pcl::search::KdTree<PointT>::Ptr tree(new pcl::search::KdTree<PointT>());
         pcl::PointCloud<pcl::Normal>::Ptr road_normals(new pcl::PointCloud<pcl::Normal>);
@@ -101,7 +106,9 @@ class VoxelGrid_filter : public rclcpp::Node
         road_extract_indices.setIndices(road_inliers);
         road_extract_indices.setNegative(true);
         road_extract_indices.filter(*road_cloud);
-  //==================================== Traffic Segmentation  ====================================
+
+    // Traffic Segmentation
+
     pcl::PointCloud<PointT>::Ptr segmented_cluster (new pcl::PointCloud<PointT>);
     pcl::PointCloud<PointT>::Ptr all_clusters (new pcl::PointCloud<PointT>);
     tree->setInputCloud (road_cloud);
@@ -162,7 +169,7 @@ class VoxelGrid_filter : public rclcpp::Node
         }
     }
 
-    //==================================== Drawing Boxes  ====================================
+    // Drawing Bounding boxes
 
     visualization_msgs::msg::MarkerArray marker_array;
 
@@ -314,15 +321,12 @@ class VoxelGrid_filter : public rclcpp::Node
 
         marker_pub->publish(marker_array);
     }
-  //==================================== Cloud publishing to ROS  ====================================
 
+      // Publishing the cloud
         // Convert cloud to ros2 message
         sensor_msgs::msg::PointCloud2 traffic_seg_ros2;
         pcl::toROSMsg(*all_clusters, traffic_seg_ros2);
         traffic_seg_ros2.header = input_cloud->header;
-        // std::cout << "PointCloud size before voxelization: " << pcl_cloud->size() << std::endl;
-        // std::cout << "PointCloud size after voxelization: " << voxel_cloud->size() << std::endl;
-
         publisher_->publish(traffic_seg_ros2);
 
 
