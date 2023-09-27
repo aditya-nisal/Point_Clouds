@@ -11,7 +11,7 @@ find_package(PCL REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
-
+find_package(visualization_msgs REQUIRED)
 
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
@@ -40,7 +40,7 @@ add_executable(kd_tree src/6_kd_tree.cpp)
 target_link_libraries(kd_tree ${PCL_LIBRARIES})
 
 add_executable(traffic_segmentation src/7_traffic_segmentation.cpp)
-ament_target_dependencies(traffic_segmentation rclcpp sensor_msgs pcl_conversions)
+ament_target_dependencies(traffic_segmentation rclcpp sensor_msgs pcl_conversions visualization_msgs)
 target_link_libraries(traffic_segmentation ${PCL_LIBRARIES})
 
 
