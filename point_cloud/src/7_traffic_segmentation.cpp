@@ -62,7 +62,7 @@ class VoxelGrid_filter : public rclcpp::Node
         passing_y.setFilterFieldName("y");
         passing_y.setFilterLimits(-radius,radius);
         passing_y.filter(*cropped_cloud);
-        
+
         // Voxel Downsampling
         pcl::PointCloud<PointT>::Ptr voxel_cloud (new pcl::PointCloud<PointT>) ;
         pcl::VoxelGrid<PointT> voxel_filter;
@@ -111,11 +111,11 @@ class VoxelGrid_filter : public rclcpp::Node
 
     pcl::PointCloud<PointT>::Ptr segmented_cluster (new pcl::PointCloud<PointT>);
     pcl::PointCloud<PointT>::Ptr all_clusters (new pcl::PointCloud<PointT>);
-    tree->setInputCloud (road_cloud);
-    std::vector<pcl::PointIndices> cluster_indices;
-    pcl::EuclideanClusterExtraction<PointT> ec;
+    tree->setInputCloud (road_cloud); // kd tree search method used
+    std::vector<pcl::PointIndices> cluster_indices; // Vector to store the list of cluster indices
+    pcl::EuclideanClusterExtraction<PointT> eucludian_cluster; // EEucludian cluster object
 
-
+      // Struct to store min and max coordinates fo boundign boxes and the rbg values
         struct BBox
     {
       float x_min;
@@ -128,12 +128,14 @@ class VoxelGrid_filter : public rclcpp::Node
       double g = 0.0;
       double b = 0.0;
     };
-    ec.setClusterTolerance (0.25); // 2cm
-    ec.setMinClusterSize (600);
-    ec.setMaxClusterSize (2000);
-    ec.setSearchMethod (tree);
-    ec.setInputCloud (road_cloud);
-    ec.extract (cluster_indices);
+
+    // Setting Cluster parameters
+    eucludian_cluster.setClusterTolerance (0.25); // 2cm
+    eucludian_cluster.setMinClusterSize (600);
+    eucludian_cluster.setMaxClusterSize (2000);
+    eucludian_cluster.setSearchMethod (tree);
+    eucludian_cluster.setInputCloud (road_cloud);
+    eucludian_cluster.extract (cluster_indices);
     std::vector<BBox> bboxes;
 
     size_t min_reasonable_size = 610;
@@ -141,7 +143,7 @@ class VoxelGrid_filter : public rclcpp::Node
     int num_reasonable_clusters = 0;
     for (size_t i = 0; i < cluster_indices.size(); i++)
     {
-        if (cluster_indices[i].indices.size() > min_reasonable_size && cluster_indices[i].indices.size() < max_reasonable_size)
+        if (cluster_indices[i].indices.size() > min_reasonable_size && cluster_indices[i].indices.size() < max_reasonable_size)  // For each cluster it checks if the size is between defined thresholds
         {
             pcl::PointCloud<PointT>::Ptr reasonable_cluster (new pcl::PointCloud<PointT>);
             pcl::ExtractIndices<PointT> extract;
@@ -154,8 +156,9 @@ class VoxelGrid_filter : public rclcpp::Node
             num_reasonable_clusters++;
 
             Eigen::Vector4f min_pt, max_pt;
-            pcl::getMinMax3D<PointT>(*reasonable_cluster, min_pt, max_pt);
+            pcl::getMinMax3D<PointT>(*reasonable_cluster, min_pt, max_pt); // Get te min and max points coordinate
 
+            // Get min and max point of the cluster, find the center and add to the bounding box vector
             pcl::PointXYZ center((min_pt[0] + max_pt[0]) / 2.0, (min_pt[1] + max_pt[1]) / 2.0, (min_pt[2] + max_pt[2]) / 2.0);
             BBox bbox;
             bbox.x_min = min_pt[0];
@@ -171,12 +174,12 @@ class VoxelGrid_filter : public rclcpp::Node
 
     // Drawing Bounding boxes
 
-    visualization_msgs::msg::MarkerArray marker_array;
+    visualization_msgs::msg::MarkerArray marker_array; // Object to store array of markers
 
     int id = 0;
     const std_msgs::msg::Header& inp_header = input_cloud->header;
     // Create a marker for each bounding box
-    for (const auto& bbox : bboxes)
+    for (const auto& bbox : bboxes) // Looping over points in the bbox vector we added
     {
         // Create the marker for the top square
         visualization_msgs::msg::Marker top_square_marker;
@@ -194,7 +197,7 @@ class VoxelGrid_filter : public rclcpp::Node
 
         // Add the points to the top square marker
         geometry_msgs::msg::Point p1, p2, p3, p4;
-        p1.x = bbox.x_max; p1.y = bbox.y_max; p1.z = bbox.z_max;
+        p1.x = bbox.x_max; p1.y = bbox.y_max; p1.z = bbox.z_max; // Z remains same in the upper and lower plane
         p2.x = bbox.x_min; p2.y = bbox.y_max; p2.z = bbox.z_max;
         p3.x = bbox.x_min; p3.y = bbox.y_min; p3.z = bbox.z_max;
         p4.x = bbox.x_max; p4.y = bbox.y_min; p4.z = bbox.z_max;
@@ -223,7 +226,7 @@ class VoxelGrid_filter : public rclcpp::Node
 
         // Add the points to the bottom square marker
         geometry_msgs::msg::Point p5, p6, p7, p8;
-        p5.x = bbox.x_max; p5.y = bbox.y_max; p5.z = bbox.z_min;
+        p5.x = bbox.x_max; p5.y = bbox.y_max; p5.z = bbox.z_min; // Z remains same in the upper and lower plane
         p6.x = bbox.x_min; p6.y = bbox.y_max; p6.z = bbox.z_min;
         p7.x = bbox.x_min; p7.y = bbox.y_min; p7.z = bbox.z_min;
         p8.x = bbox.x_max; p8.y = bbox.y_min; p8.z = bbox.z_min;
