@@ -27,7 +27,7 @@ int main(){
     pcl::PointCloud<PointT>::Ptr cloud (new pcl::PointCloud<PointT>); // SHared pointer takes of the autonmatic memory allocation to the extent it is required
                                                                       // Creates a sharedPtr of the point data type. new pcl::... means alllocating memory to the cloud
     pcl::PCDReader cloud_reader;
-    std::string path =  "/home/adinisal/ros2_ws/src/point_cloud/";
+    std::string path =  "/home/adinisal/ros2_ws/src/point_cloud/pcds/";
     std::string input_cloud =  "tb3_world.pcd";
     cloud_reader.read(path+input_cloud, *cloud); // Reading cloud fromthe path and storing it in the empty cloud created
 
